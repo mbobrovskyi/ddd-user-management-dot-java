@@ -1,12 +1,13 @@
 package com.example.user.domain;
 
 import com.example.user.common.domain.Session;
+import com.example.user.domain.valueObjects.Token;
 
 import java.util.List;
 
 public interface SessionRepository {
-    Session get(String token);
-    void set(String token, Session session, long expTime);
-    void delete(long userId, String token);
-    List<String> getTokensByUserId(long userId);
+    Session get(Token token);
+    void set(Token token, Session session);
+    void delete(long userId, Token token);
+    List<Token> getTokensByUserId(long userId);
 }

@@ -8,4 +8,5 @@ public interface UserRepository {
     User getById(long id);
     User getByEmail(Email email);
     Page<User> getAll();
+    User save(User user);
 }

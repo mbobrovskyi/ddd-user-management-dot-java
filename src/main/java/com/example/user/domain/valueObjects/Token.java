@@ -1,31 +1,32 @@
 package com.example.user.domain.valueObjects;
 
 import com.example.user.common.domain.ValueObject;
-import com.example.user.domain.entities.User;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Base64;
 
 public class Token extends ValueObject {
     public static final int TOKEN_LENGTH = 32;
     public static final long TTL = 30 * 24 * 60 * 60;
 
     private String token;
-    private long expInt;
-    private LocalDateTime expTime;
-    private User user;
+    private long expiresIn;
+    private LocalDateTime expiresAt;
 
-    public Token(User user) {
-        this.user = user;
-
-        SecureRandom rnd = new SecureRandom();
+    public Token() {
+        SecureRandom secureRandom = new SecureRandom();
         byte[] token = new byte[TOKEN_LENGTH];
-        rnd.nextBytes(token);
+        secureRandom.nextBytes(token);
 
-        this.token = token.toString();
-        this.expInt = TTL;
-        this.expTime = LocalDateTime.now().plusSeconds(TTL);
+        this.token = Base64.getUrlEncoder().withoutPadding().encodeToString(token);
+        this.expiresIn = TTL;
+        this.expiresAt = LocalDateTime.now().plusSeconds(TTL);
+    }
+
+    public Token(String token) {
+        this.token = token;
     }
 
     @Override
@@ -37,12 +38,11 @@ public class Token extends ValueObject {
         return token;
     }
 
-    public long getExpInt() {
-        return expInt;
+    public long getExpiresIn() {
+        return expiresIn;
     }
 
-    public LocalDateTime getExpTime() {
-        return expTime;
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
     }
-
 }

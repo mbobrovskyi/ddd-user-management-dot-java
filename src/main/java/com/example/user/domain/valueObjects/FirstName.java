@@ -1,8 +1,8 @@
 package com.example.user.domain.valueObjects;
 
 import com.example.user.common.domain.ValueObject;
-import com.example.user.common.errors.Errors;
-import com.example.user.common.result.Result;
+import com.example.user.common.domain.validationErrors.MaxLengthError;
+import com.example.user.common.domain.validationErrors.ValueIsRequiredError;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.Arrays;
@@ -12,8 +12,18 @@ public class FirstName extends ValueObject {
 
     private String value;
 
-    private FirstName(String value) {
-        this.value = value;
+    public FirstName(String value) {
+        if (Strings.isBlank(value)) {
+            throw new ValueIsRequiredError();
+        }
+
+        String firstName = value.trim();
+
+        if (firstName.length() > MAX_LENGTH) {
+            throw new MaxLengthError(MAX_LENGTH);
+        }
+
+        this.value = firstName;
     }
 
     @Override
@@ -24,19 +34,4 @@ public class FirstName extends ValueObject {
     public String getValue() {
         return value;
     }
-
-    public static Result<FirstName, Error> create(String value) {
-        if (Strings.isBlank(value)) {
-            return Result.Error(Errors.Global.ValueIsRequiredError());
-        }
-
-        String firstName = value.trim();
-
-        if (firstName.length() > MAX_LENGTH) {
-            return Result.Error(Errors.Global.MaxLengthError(MAX_LENGTH));
-        }
-
-        return Result.Success(new FirstName(value));
-    }
-
 }

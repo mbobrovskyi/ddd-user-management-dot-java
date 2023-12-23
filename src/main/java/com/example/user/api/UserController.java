@@ -18,20 +18,17 @@ public class UserController extends BaseController {
     @Autowired
     private UserService userService;
 
-    @GetMapping( "{id}")
-    public UserResponse getById(@PathVariable long id) {
-        User user = userService.getById(id);
-        if (user == null) {
-            return null;
-        }
-        return UserMapper.userToDto(user);
-    }
-
     @GetMapping
     public Page<UserResponse> getUsers() {
         Page<User> page = userService.getAll();
         return new Page<>(
-                page.getItems().stream().map(UserMapper::userToDto).toList(),
+                page.getItems().stream().map(UserMapper::userToResponse).toList(),
                 page.getCount());
+    }
+
+    @GetMapping( "{id}")
+    public UserResponse getById(@PathVariable long id) {
+        User user = userService.getById(id);
+        return UserMapper.userToResponse(user);
     }
 }

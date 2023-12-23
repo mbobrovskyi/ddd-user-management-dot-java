@@ -1,14 +1,13 @@
 package com.example.user.domain;
 
-import com.example.user.common.errors.BadRequestError;
-import com.example.user.common.errors.Error;
-import com.example.user.common.errors.NotFoundError;
+import com.example.user.common.domain.Session;
+import com.example.user.common.errors.ConflictError;
 import com.example.user.common.errors.UnauthorizedError;
-import com.example.user.common.result.Result;
 import com.example.user.domain.entities.User;
 import com.example.user.domain.entities.UserCredentials;
-import com.example.user.domain.valueObjects.Email;
-import com.example.user.domain.valueObjects.Password;
+import com.example.user.domain.valueObjects.HashPassword;
+import com.example.user.domain.valueObjects.SignIn;
+import com.example.user.domain.valueObjects.SignUp;
 import com.example.user.domain.valueObjects.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,24 +18,36 @@ public class AuthService {
     private UserRepository userRepository;
     @Autowired
     private UserCredentialsRepository userCredentialsRepository;
+    @Autowired
+    private SessionRepository sessionRepository;
 
-    public Result<Token, Error> signIn(Email email, Password password) {
-        UserCredentials userCredentials = userCredentialsRepository.getByEmail(email);
+    public Token signIn(SignIn signIn) {
+        UserCredentials userCredentials = userCredentialsRepository.getByEmail(signIn.getEmail());
         if (userCredentials == null) {
-            return Result.Error(new UnauthorizedError());
+            throw new UnauthorizedError();
         }
 
-        if (!userCredentials.getHashPassword().compare(password)) {
-            return Result.Error(new UnauthorizedError());
+        if (!userCredentials.getHashPassword().compare(signIn.getPassword())) {
+            throw new UnauthorizedError();
         }
 
-        User user = userRepository.getByEmail(email);
-        if (user == null) {
-            return Result.Error(new UnauthorizedError());
+        Token token = new Token();
+        Session session = new Session(userCredentials.getId());
+        sessionRepository.set(token, session);
+
+        return token;
+    }
+
+    public Token signUp(SignUp signUp) {
+        User user = userRepository.getByEmail(signUp.getEmail());
+        if (user != null) {
+            throw new ConflictError();
         }
 
-        Token token = new Token(user);
+        user = userRepository.save(new User(signUp.getEmail(), signUp.getFirstName(), signUp.getLastName()));
+        UserCredentials userCredentials = new UserCredentials(user.getId(), user.getEmail(), new HashPassword(signUp.getPassword()));
+        userCredentialsRepository.save(userCredentials);
 
-        return Result.Success(token);
+        return signIn(new SignIn(signUp.getEmail(), signUp.getPassword()));
     }
 }

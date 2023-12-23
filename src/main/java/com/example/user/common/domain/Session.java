@@ -5,12 +5,15 @@ import java.util.UUID;
 public class Session {
     private UUID id;
     private long userId;
-    private String email;
 
-    public Session(long userId, String email) {
+    public Session(long userId) {
         this.id = UUID.randomUUID();
         this.userId = userId;
-        this.email = email;
+    }
+
+    public Session(UUID id, long userId) {
+        this.id = id;
+        this.userId = userId;
     }
 
     public UUID getId() {
@@ -19,10 +22,6 @@ public class Session {
 
     public long getUserId() {
         return userId;
-    }
-
-    public String getEmail() {
-        return email;
     }
 
     @Override

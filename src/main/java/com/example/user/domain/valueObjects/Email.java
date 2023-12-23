@@ -1,9 +1,9 @@
 package com.example.user.domain.valueObjects;
 
 import com.example.user.common.domain.ValueObject;
-import com.example.user.common.errors.Error;
-import com.example.user.common.errors.Errors;
-import com.example.user.common.result.Result;
+import com.example.user.common.domain.validationErrors.MaxLengthError;
+import com.example.user.common.domain.validationErrors.ValueIsNotValidError;
+import com.example.user.common.domain.validationErrors.ValueIsRequiredError;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.Arrays;
@@ -13,8 +13,22 @@ public class Email extends ValueObject {
 
     private String value;
 
-    private Email(String value) {
-        this.value = value;
+    public Email(String value) {
+        if (Strings.isBlank(value)) {
+            throw new ValueIsRequiredError();
+        }
+
+        String email = value.trim();
+
+        if (email.length() > MAX_LENGTH) {
+            throw new MaxLengthError(MAX_LENGTH);
+        }
+
+        if (!email.matches("^(.+)@(.+)$")) {
+            throw new ValueIsNotValidError();
+        }
+
+        this.value = email;
     }
 
     @Override
@@ -26,21 +40,4 @@ public class Email extends ValueObject {
         return value;
     }
 
-    public static Result<Email, Error> create(String value) {
-        if (Strings.isBlank(value)) {
-            return Result.Error(Errors.Global.ValueIsRequiredError());
-        }
-
-        String email = value.trim();
-
-        if (email.length() > MAX_LENGTH) {
-            return Result.Error(Errors.Global.MaxLengthError(MAX_LENGTH));
-        }
-
-        if (!email.matches("^(.+)@(.+)$")) {
-            return Result.Error(Errors.Global.ValueIsNotValidError());
-        }
-
-        return Result.Success(new Email(value));
-    }
 }

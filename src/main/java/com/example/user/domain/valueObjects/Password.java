@@ -1,9 +1,10 @@
 package com.example.user.domain.valueObjects;
 
 import com.example.user.common.domain.ValueObject;
-import com.example.user.common.errors.Error;
-import com.example.user.common.errors.Errors;
-import com.example.user.common.result.Result;
+import com.example.user.common.domain.validationErrors.MaxLengthError;
+import com.example.user.common.domain.validationErrors.MinLengthError;
+import com.example.user.common.domain.validationErrors.ValueIsNotValidError;
+import com.example.user.common.domain.validationErrors.ValueIsRequiredError;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.Arrays;
@@ -14,8 +15,26 @@ public class Password extends ValueObject {
 
     private String value;
 
-    private Password(String value) {
-        this.value = value;
+    public Password(String value) {
+        if (Strings.isBlank(value)) {
+            throw new ValueIsRequiredError();
+        }
+
+        String password = value.trim();
+
+        if (password.length() < MIN_LENGTH) {
+            throw new MinLengthError(MIN_LENGTH);
+        }
+
+        if (password.length() > MAX_LENGTH) {
+            throw new MaxLengthError(MAX_LENGTH);
+        }
+
+        if (!password.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")) {
+            throw new ValueIsNotValidError();
+        }
+
+        this.value = password;
     }
 
     @Override
@@ -25,27 +44,5 @@ public class Password extends ValueObject {
 
     public String getValue() {
         return value;
-    }
-
-    public static Result<Password, Error> create(String value) {
-        if (Strings.isBlank(value)) {
-            return Result.Error(Errors.Global.ValueIsRequiredError());
-        }
-
-        String password = value.trim();
-
-        if (password.length() < MIN_LENGTH) {
-            return Result.Error(Errors.Global.MinLengthError(MIN_LENGTH));
-        }
-
-        if (password.length() > MAX_LENGTH) {
-            return Result.Error(Errors.Global.MaxLengthError(MAX_LENGTH));
-        }
-
-        if (!password.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$")) {
-            return Result.Error(Errors.Global.ValueIsNotValidError());
-        }
-
-        return Result.Success(new Password(value));
     }
 }
